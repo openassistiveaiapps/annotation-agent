@@ -61,6 +61,71 @@ annotation-agent/
 
 ---
 
+## When Does Everything Run?
+
+There are **two separate things running at two different times**. Understanding this distinction is important for partner teams.
+
+```
+DESIGN TIME (developer's machine or CI pipeline)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ① Partner team runs the AI Agent         ← ONE-TIME setup
+        ↓
+     Scans repo, injects @ActionCenterModel into source,
+     patches pom.xml with JAR dependencies
+        ↓
+     Developer reviews the diff and commits to Git
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ② Every mvn compile / gradle build       ← EVERY BUILD
+        ↓
+     ActionCenterAnnotationScanner (APT) fires
+     automatically inside javac — no manual step
+        ↓
+     Generates action-center-catalog.json inside the JAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RUNTIME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Nothing runs. Zero overhead.
+  Annotations are SOURCE-retained — stripped by the
+  compiler. The catalog is a static JSON file in the JAR.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Responsibility Breakdown
+
+| What | When | Who Triggers It | How Often |
+|---|---|---|---|
+| AI Agent | Design time | Developer runs it manually | Once at onboarding, then whenever new model classes are added |
+| APT Scanner | Every compile | `mvn compile` or CI pipeline | Every single build, automatically |
+| Runtime | Never | Nobody | Never — zero runtime footprint |
+
+### Practical Day-to-Day for a Partner Team
+
+```
+Day 1 — Onboarding
+  Developer runs the agent once against their repo
+  12 classes get annotated, pom.xml gets patched
+  Developer reviews the diff and commits to Git
+  ✓ Onboarding complete — agent not needed again
+
+Day 2 onwards — Normal dev cycle
+  Team codes and builds as usual (mvn compile)
+  APT Scanner fires silently inside every build
+  Catalog JSON is regenerated automatically
+  Team never thinks about the agent again
+
+3 months later — 5 new event classes added
+  Developer runs the agent once more
+  Only unannotated classes are picked up and processed
+  5 new classes get annotated, committed to Git
+  ✓ Done
+```
+
+> **Key point:** The AI Agent is a one-time onboarding tool and occasional re-run helper — not something running continuously. The APT Scanner is what runs silently on every build, forever.
+
+---
+
 ## Step 1: Build & Publish the JARs
 
 ```bash
