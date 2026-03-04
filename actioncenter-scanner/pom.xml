@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.actioncenter</groupId>
+        <artifactId>actioncenter-annotation-scanner-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>actioncenter-scanner</artifactId>
+    <packaging>jar</packaging>
+
+    <!-- <n>ActionCenter Annotation Scanner</n> removed: invalid tag -->
+    <description>
+        Compile-time annotation processor (APT) for the ActionCenterAnnotationScannerAgent.
+        Scans classes annotated with @ActionCenterModel and @ActionCenterField,
+        then generates target/actioncenter/action-center-catalog.json during mvn compile.
+        Add as a 'provided' dependency — runs only at compile time, not at runtime.
+    </description>
+
+    <dependencies>
+        <!-- Annotation definitions -->
+        <dependency>
+            <groupId>com.actioncenter</groupId>
+            <artifactId>actioncenter-annotations</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Jackson for JSON generation — shaded into the processor jar -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Shade Jackson into the processor jar so teams don't need it on their classpath -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                        <configuration>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.fasterxml.jackson</pattern>
+                                    <shadedPattern>com.actioncenter.shaded.jackson</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <!-- Exclude the processor jar itself from being in the shaded artifact's services -->
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Disable annotation processing on this module itself -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <compilerArgument>-proc:none</compilerArgument>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

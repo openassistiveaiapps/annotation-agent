@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.actioncenter</groupId>
+        <artifactId>actioncenter-annotation-scanner-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>actioncenter-annotations</artifactId>
+    <packaging>jar</packaging>
+
+    <!-- <n>ActionCenter Annotations</n> removed: invalid tag -->
+    <description>
+        Annotation definitions for the ActionCenterAnnotationScannerAgent.
+        Teams add this as a 'provided' dependency and annotate their model
+        classes with @ActionCenterModel and @ActionCenterField.
+        Zero runtime footprint — annotations are SOURCE-retained only.
+    </description>
+
+    <!-- No dependencies needed — pure annotation definitions -->
+
+</project>
